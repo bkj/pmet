@@ -57,7 +57,7 @@ def load_data(path):
     X, y = np.array(X), np.array(y)
     return X, y, data
 
-X_train, y_train, train_data = load_data('./data/train.jl')
+X_train, y_train, train_data = load_data('./train.jl')
 
 uchars = set(reduce(lambda a,b: a+b, X_train))
 char_lookup = dict(zip(uchars, range(1, len(uchars) + 1)))
@@ -76,11 +76,11 @@ model = CharacterLSTM(**{
     "n_chars"    : len(char_lookup) + 1,
     "n_classes"  : len(label_lookup),
     
-    "emb_dim" : 128,
-    "rec_hidden_dim" : 256,
-})
+    "emb_dim"        : 128,
+    "rec_hidden_dim" : 64,
+}).cuda()
 
-loss_function = nn.CrossEntropyLoss()
+loss_function = nn.CrossEntropyLoss().cuda()
 opt = torch.optim.Adam(model.parameters())
 
 # --
@@ -89,7 +89,8 @@ opt = torch.optim.Adam(model.parameters())
 log_interval = 100
 
 model.train()
-for epoch in range(1):
+start_time = time()
+for epoch in range(5):
     total_loss = 0
     res = 0
     epoch_start_time = time()
@@ -98,8 +99,8 @@ for epoch in range(1):
         
         # Training
         model.zero_grad()
-        score = model(Variable(xt))
-        loss = loss_function(score.view(1, -1), Variable(yt))
+        score = model(Variable(xt).cuda())
+        loss = loss_function(score.view(1, -1), Variable(yt).cuda())
         loss.backward()
         opt.step()
         
@@ -107,11 +108,12 @@ for epoch in range(1):
         total_loss += loss.data[0]
         res += yt[0] == score.max(0)[1].data[0]
         if i and not i % log_interval:
-            print "Epoch=%d | i=%d | Loss=%f | Epoch Time=%f | Correct=%d" % (
+            print "Epoch=%d | i=%d | Loss=%f | Epoch Time=%f | Total Time=%f | Correct=%d" % (
                 epoch, 
                 i, 
                 total_loss / log_interval, 
                 time() - epoch_start_time,
+                time() - start_time,
                 res
             )
             total_loss = 0
@@ -122,10 +124,10 @@ for epoch in range(1):
 
 model.eval()
 
-X_test, y_test, test_data = load_data('./data/test.jl')
+X_test, y_test, test_data = load_data('./test.jl')
 X_test = np.array([torch.LongTensor([char_lookup.get(xx, 0) for xx in x]) for x in X_test])
 
-test_preds = np.array([model(Variable(x)).max(0)[1].data[0] for x in X_test])
+test_preds = np.array([model(Variable(x).cuda()).max(0)[1].data[0] for x in X_test])
 test_preds = np.array([rev_label_lookup[p] for p in test_preds])
 
 print pd.crosstab(test_preds, y_test)

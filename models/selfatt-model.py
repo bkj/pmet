@@ -35,7 +35,7 @@ class ACharacterLSTM(nn.Module):
         
         self.fc1 = nn.Linear(att_channels * rec_hidden_dim, n_classes)
         
-        self.I = Variable(torch.eye(att_channels))
+        self.I = Variable(torch.eye(att_channels)).cuda()
     
     def _encode(self, x):
         # one-hot -> biLSTM encoded
@@ -48,7 +48,6 @@ class ACharacterLSTM(nn.Module):
     def _attention(self, x):
         A = F.softmax(self.att2(F.tanh(self.att1(x))).t())
         x = torch.mm(A, x)
-        x = x.view(1, -1)
         return x, A
     
     def _penalty(self, A):
@@ -61,7 +60,7 @@ class ACharacterLSTM(nn.Module):
         
         self.A, self.p = A, p
         
-        return self.fc1(x).view(-1)
+        return self.fc1(x.view(1, -1)).view(-1)
 
 # --
 # Setup
@@ -80,7 +79,7 @@ def load_data(path):
     X, y = np.array(X), np.array(y)
     return X, y, data
 
-X_train, y_train, train_data = load_data('./data/train.jl')
+X_train, y_train, train_data = load_data('./train.jl')
 
 uchars = set(reduce(lambda a,b: a+b, X_train))
 char_lookup = dict(zip(uchars, range(1, len(uchars) + 1)))
@@ -95,14 +94,19 @@ y_train = np.array([torch.LongTensor([label_lookup[yy]]) for yy in y_train])
 # --
 # Define model
 
-lambda_ = 1
+r_lambda = 0.0
 
 model = ACharacterLSTM(**{
     "n_chars"    : len(char_lookup) + 1,
-    "n_classes"  : len(label_lookup)
-})
+    "n_classes"  : len(label_lookup),
+    
+    "att_channels"   : 5,
+    "att_dim"        : 16,
+    "emb_dim"        : 64, 
+    "rec_hidden_dim" : 32,
+}).cuda()
 
-loss_function = nn.CrossEntropyLoss()
+loss_function = nn.CrossEntropyLoss().cuda()
 opt = torch.optim.Adam(model.parameters())
 
 # --
@@ -111,8 +115,10 @@ opt = torch.optim.Adam(model.parameters())
 log_interval = 100
 
 model.train()
+start_time = time()
 for epoch in range(1):
-    total_loss = 0
+    total_r_loss = 0
+    total_c_loss = 0
     res = 0
     epoch_start_time = time()
     p = np.random.permutation(X_train.shape[0]) # shuffle = True
@@ -120,23 +126,31 @@ for epoch in range(1):
         
         # Training
         model.zero_grad()
-        score = model(Variable(xt))
-        loss = loss_function(score.view(1, -1), Variable(yt)) + lambda_ * model.p
+        score = model(Variable(xt).cuda())
+        
+        c_loss = loss_function(score.view(1, -1), Variable(yt).cuda())
+        r_loss = r_lambda * model.p
+        loss = c_loss + r_loss
         loss.backward()
+        
         opt.step()
         
         # Logging
-        total_loss += loss.data[0]
+        total_c_loss += c_loss.data[0]
+        total_r_loss += r_loss.data[0]
         res += yt[0] == score.max(0)[1].data[0]
         if i and not i % log_interval:
-            print "Epoch=%d | i=%d | Loss=%f | Epoch Time=%f | Correct=%d" % (
+            print "Epoch=%d | i=%d | Loss=%f | RegLoss=%f | Epoch Time=%f | Total Time=%f | Correct=%d" % (
                 epoch, 
                 i, 
-                total_loss / log_interval, 
+                total_c_loss / log_interval, 
+                total_r_loss / log_interval, 
                 time() - epoch_start_time,
+                time() - start_time,
                 res
             )
-            total_loss = 0
+            total_c_loss = 0
+            total_r_loss = 0
             res = 0
 
 # --
@@ -144,10 +158,10 @@ for epoch in range(1):
 
 model.eval()
 
-X_test, y_test, test_data = load_data('./data/test.jl')
+X_test, y_test, test_data = load_data('./test.jl')
 X_test = np.array([torch.LongTensor([char_lookup.get(xx, 0) for xx in x]) for x in X_test])
 
-test_preds = np.array([model(Variable(x)).max(0)[1].data[0] for x in X_test])
+test_preds = np.array([model(Variable(x).cuda()).max(0)[1].data[0] for x in X_test])
 test_preds = np.array([rev_label_lookup[p] for p in test_preds])
 
 print pd.crosstab(test_preds, y_test)

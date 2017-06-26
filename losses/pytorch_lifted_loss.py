@@ -18,9 +18,9 @@ def lifted_loss(score, target, margin=1):
     counter = 0
     
     bsz = score.size(0)
+    
     mag = (score ** 2).sum(1).expand(bsz, bsz)
     sim = score.mm(score.transpose(0, 1))
-    
     dist = (mag + mag.transpose(0, 1) - 2 * sim)
     dist = torch.nn.functional.relu(dist).sqrt()
     

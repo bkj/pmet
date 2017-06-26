@@ -13,11 +13,12 @@ def dlib_metric_loss(score, target, margin=1, extra_margin=0, cuda=False):
     loss = Variable(torch.FloatTensor([0]))
     if cuda:
         loss = loss.cuda()
+    
     bsz = score.size(0)
     
     # Compute distance matrix
-    mag = (score ** 2).sum(1).expand(bsz, bsz)
-    sim = score.mm(score.transpose(0, 1))
+    mag  = (score ** 2).sum(1).expand(bsz, bsz)
+    sim  = score.mm(score.transpose(0, 1))
     dist = (mag + mag.transpose(0, 1) - 2 * sim)
     dist = torch.nn.functional.relu(dist).sqrt()
     
@@ -56,13 +57,14 @@ def dlib_metric_loss(score, target, margin=1, extra_margin=0, cuda=False):
 
 # --
 
-import numpy as np
-np.random.seed(123)
-
-score = np.random.uniform(0, 1, (20, 3))
-target = np.random.choice(range(3), 20)
-
-score = Variable(torch.FloatTensor(score))
-target = Variable(torch.LongTensor(target))
-
-dlib_metric_loss(score, target)
+if __name__ == "__main__":
+    import numpy as np
+    np.random.seed(123)
+    
+    score = np.random.uniform(0, 1, (20, 3))
+    target = np.random.choice(range(3), 20)
+    
+    score = Variable(torch.FloatTensor(score))
+    target = Variable(torch.LongTensor(target))
+    
+    dlib_metric_loss(score, target)

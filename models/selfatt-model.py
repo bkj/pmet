@@ -79,7 +79,7 @@ def load_data(path):
     X, y = np.array(X), np.array(y)
     return X, y, data
 
-X_train, y_train, train_data = load_data('./train.jl')
+X_train, y_train, train_data = load_data('./data/train.jl')
 
 uchars = set(reduce(lambda a,b: a+b, X_train))
 char_lookup = dict(zip(uchars, range(1, len(uchars) + 1)))
@@ -94,7 +94,7 @@ y_train = np.array([torch.LongTensor([label_lookup[yy]]) for yy in y_train])
 # --
 # Define model
 
-r_lambda = 0.0
+r_lambda = 1.0
 
 model = ACharacterLSTM(**{
     "n_chars"    : len(char_lookup) + 1,
@@ -158,7 +158,7 @@ for epoch in range(1):
 
 model.eval()
 
-X_test, y_test, test_data = load_data('./test.jl')
+X_test, y_test, test_data = load_data('./data/test.jl')
 X_test = np.array([torch.LongTensor([char_lookup.get(xx, 0) for xx in x]) for x in X_test])
 
 test_preds = np.array([model(Variable(x).cuda()).max(0)[1].data[0] for x in X_test])

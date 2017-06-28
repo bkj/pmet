@@ -40,3 +40,8 @@ It automated data cleaning, running this kind of function over the columns of a 
 Classification works when we have a closed set of labels -- that is, we know the labels that we care about ahead of time, and we have examples of each of the classes.  Metric learning can help in a situation where the only kinds of labels we have are "this set of things are all similar" and "these sets of strings are dissimilar".
 
 Roughly, a lot of these methods boil down to learning an embedding for the strings such that strings that get embedded close together are likely from the same class.  This can be learned w/ loss functions like contrastive loss, triplet loss, and some others that are implemented here.  Roughly, most of these loss functions boil down to "pull the things that are similar close together, and push the things that are dissimilar far apart", but the details vary.
+
+An example of when we might need to use these methods is in "schema alignment" -- automatically determining the mapping between the variables in two datasets.  In this situations we have examples of similar things (values in the same column in the same dataset) and dissimilar things (values in different columns in the same dataset).  Using metric learning, we can use these relationships to learn an embedding of the values in each column of each dataset, and then say that columns that are "close" should probably be aligned.
+
+
+

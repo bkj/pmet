@@ -2,6 +2,10 @@
 
 Library for classification and metric learning on strings.
 
+This project is a descendent of https://github.com/bkj/wit -- there's been a lot of relevant work done and software released in the past ~ year, and this rewrite aims to take advantage of that.
+
+Written in `pytorch`.  
+
 ### Motivation
 
 #### Classification

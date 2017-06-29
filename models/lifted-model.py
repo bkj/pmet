@@ -1,17 +1,30 @@
+#!/usr/bin/env python
+
+"""
+    lifted-model.py
+    
+    Metric learning using `lifted_loss`
+"""
+
+
 from __future__ import division
 
+import sys
 import argparse
+import numpy as np
+import pandas as pd
+import ujson as json
+
+from time import time
+from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-import ujson as json
-import numpy as np
-import pandas as pd
-from time import time
-
-from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
+sys.path.append('./losses')
+from pytorch_lifted_loss import lifted_loss
 
 # --
 # Define model
@@ -30,6 +43,7 @@ class CharacterLSTM(nn.Module):
         embeds = self.char_embs(x)
         self.lstm_out, _ = self.lstm(embeds.view(embeds.size(0), 1, -1))
         return self.fc1(self.lstm_out[-1,0,:].view(1, -1))
+
 
 # --
 # Setup
@@ -76,42 +90,6 @@ model.cuda()
 opt = torch.optim.Adam(model.parameters())
 
 # --
-# Define loss
-
-def lifted_loss(score, target, margin=1):
-    loss = 0
-    counter = 0
-    
-    bsz = score.size(0)
-    mag = (score ** 2).sum(1).expand(bsz, bsz)
-    sim = score.mm(score.transpose(0, 1))
-    
-    dist = (mag + mag.transpose(0, 1) - 2 * sim)
-    dist = torch.nn.functional.relu(dist).sqrt()
-    
-    for i in range(bsz):
-        t_i = target[i].data[0]
-        
-        for j in range(i + 1, bsz):
-            t_j = target[j].data[0]
-            
-            if t_i == t_j:
-                # Negative component
-                # !! Could do other things (like softmax that weights closer negatives)
-                l_ni = (margin - dist[i][target != t_i]).exp().sum()
-                l_nj = (margin - dist[j][target != t_j]).exp().sum()
-                l_n  = (l_ni + l_nj).log()
-                
-                # Positive component
-                l_p  = dist[i,j]
-                
-                loss += torch.nn.functional.relu(l_n + l_p) ** 2
-                counter += 1
-    
-    return loss / (2 * counter)
-
-
-# --
 # Train
 
 log_interval = 100
@@ -156,22 +134,3 @@ for epoch in range(2):
 model.eval()
 preds = torch.cat([model(Variable(x)) for x,_ in ten_test]).cpu().data.numpy()
 act = torch.cat([y for _,y in ten_test]).cpu().numpy()
-
-_ = plt.scatter(preds[:,1], preds[:,2], s=1, c=act)
-plt.show()
-
-# --
-# Looking at distances
-
-from scipy.spatial.distance import pdist, squareform
-import pandas as pd
-
-tmp = squareform(pdist(preds))
-np.fill_diagonal(tmp, 1)
-
-nn = act[tmp.argmin(1)]
-pd.crosstab(nn, act)
-
-(nn == act).mean()
-(nn == act).sum()
-

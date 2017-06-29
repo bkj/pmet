@@ -1,4 +1,10 @@
-from __future__ import division
+#!/usr/bin/env python
+
+"""
+    triplet-model.py
+    
+    Metric learning via triplet loss
+"""
 
 import argparse
 import torch
@@ -144,30 +150,3 @@ for epoch in range(2):
 model.eval()
 preds = torch.cat([model(Variable(x)) for x,_ in ten_test]).cpu().data.numpy()
 act = torch.cat([y for _,y in ten_test]).cpu().numpy()
-
-_ = plt.scatter(preds[:,1], preds[:,2], s=1, c=act)
-plt.show()
-
-# --
-# Looking at distances
-
-from scipy.spatial.distance import pdist, squareform
-from seaborn import heatmap
-
-tmp = squareform(pdist(preds))
-np.fill_diagonal(tmp, 1)
-
-tmp[act == 0].T[act == 1].min()
-tmp[act == 0].T[act == 2].min()
-tmp[act == 1].T[act == 2].min()
-
-tmp = tmp[act.argsort()]
-tmp = tmp[:,act.argsort()]
-
-_ = heatmap(tmp)
-plt.show()
-
-
-
-
-

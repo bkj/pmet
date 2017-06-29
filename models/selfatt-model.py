@@ -3,6 +3,9 @@
 """
     selfatt-model.py
     
+    BiLSTM w/ attention
+    Cross-entropy loss
+    
     From https://openreview.net/pdf?id=BJC_jUqxe
 """
 
@@ -106,7 +109,7 @@ model = ACharacterLSTM(**{
     "rec_hidden_dim" : 32,
 }).cuda()
 
-loss_function = nn.CrossEntropyLoss().cuda()
+loss_function = F.cross_entropy
 opt = torch.optim.Adam(model.parameters())
 
 # --

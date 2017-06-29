@@ -4,6 +4,8 @@
     bilstm-model.py
     
     Typical biLSTM model
+    
+    Cross-entropy loss
 """
 
 from __future__ import division
@@ -80,7 +82,7 @@ model = CharacterLSTM(**{
     "rec_hidden_dim" : 64,
 }).cuda()
 
-loss_function = nn.CrossEntropyLoss().cuda()
+loss_function = F.cross_entropy
 opt = torch.optim.Adam(model.parameters())
 
 # --

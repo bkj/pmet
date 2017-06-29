@@ -47,6 +47,6 @@ Roughly, a lot of these methods boil down to learning an embedding for the strin
 
 An example of when we might need to use these methods is in "schema alignment" -- automatically determining the mapping between the variables in two datasets.  In this situations we have examples of similar things (values in the same column in the same dataset) and dissimilar things (values in different columns in the same dataset).  Using metric learning, we can use these relationships to learn an embedding of the values in each column of each dataset, and then say that columns that are "close" should probably be aligned.
 
-##### License
+### License
 MIT
 

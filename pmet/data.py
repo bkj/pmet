@@ -5,7 +5,7 @@
 
 from torchtext import data
 
-def make_iter(indir, train='train.tsv', test='test.tsv', validation=None, batch_size=32):
+def make_iter(indir, train='train.tsv', test='test.tsv', validation=None, batch_size=32, device=0):
     
     LABS = data.Field()
     VALS = data.Field(tokenize=list)
@@ -28,5 +28,6 @@ def make_iter(indir, train='train.tsv', test='test.tsv', validation=None, batch_
         batch_size=1,
         shuffle=True,
         repeat=False,
+        device=device,
     ), (len(VALS.vocab), len(LABS.vocab))
 

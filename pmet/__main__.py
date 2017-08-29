@@ -5,6 +5,7 @@
 """
 
 from __future__ import division
+from __future__ import print_function
 
 import sys
 import argparse
@@ -32,6 +33,7 @@ def parse_args():
     parser.add_argument('--bidirectional', action='store_true')
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--log-interval', type=int, default=100)
+    parser.add_argument('--no-cuda', action='store_true')
     return parser.parse_args()
 
 # --
@@ -76,10 +78,10 @@ if __name__ == "__main__":
         raise Exception('if attention=1, bidirectional=1')
     
     # IO
-    (train_iter, test_iter), (n_chars, n_classes) = make_iter(args.data_dir)
+    (train_iter, test_iter), (n_chars, n_classes) = make_iter(args.data_dir, device=-args.no_cuda)
     
-    print >> sys.stderr, 'initializing character-level LSTM | attention=%d | bidirectional=%d' %\
-        (args.attention, args.bidirectional)
+    print('initializing character-level LSTM | attention=%d | bidirectional=%d' %\
+        (args.attention, args.bidirectional), file=sys.stderr)
     
     if args.attention:
         
@@ -91,7 +93,7 @@ if __name__ == "__main__":
             "att_dim"        : 16,
             "emb_dim"        : 64, 
             "rec_hidden_dim" : 32,
-        }).cuda()
+        })
     else:
         model = CharLSTM(**{
             "n_chars"    : n_chars,
@@ -100,15 +102,19 @@ if __name__ == "__main__":
             "bidirectional"  : args.bidirectional,
             "emb_dim"        : 64,
             "rec_hidden_dim" : 32,
-        }).cuda()
+        })
     
+    if not args.no_cuda:
+        model = model.cuda()
+    
+    print(model)
     
     opt = torch.optim.Adam(model.parameters())
     
     for epoch in range(args.epochs):
-        print >> sys.stderr, 'epoch=%d | train' % epoch
+        print('epoch=%d | train' % epoch, file=sys.stderr)
         _ = train_epoch(model, train_iter, opt)
         
-        print >> sys.stderr, 'epoch=%d | test' % epoch
+        print('epoch=%d | test' % epoch, file=sys.stderr)
         preds = pd.DataFrame(list(test(model, test_iter)))
-        print >> sys.stderr, "acc=%f\n--" % (preds.act == preds.pred).mean()
+        print('acc=%f\n--' % (preds.act == preds.pred).mean(), file=sys.stderr)

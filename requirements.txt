@@ -1,2 +1,5 @@
+tqdm
+torch
+pandas
 Faker
 git+https://github.com/pytorch/text

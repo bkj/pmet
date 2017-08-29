@@ -28,6 +28,6 @@ if __name__ == "__main__":
     
     types = args.types.split(',')
     
-    for i in xrange(args.n):
+    for i in range(args.n):
         c = random.choice(types)
         print '\t'.join((c, str(getattr(faker, c)())))

@@ -2,4 +2,5 @@ tqdm
 torch
 pandas
 Faker
+ujson
 git+https://github.com/pytorch/text

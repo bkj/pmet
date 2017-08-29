@@ -55,7 +55,7 @@ class AttCharLSTM(nn.Module):
         
         self.fc1 = nn.Linear(att_channels * rec_hidden_dim, n_classes)
         
-        self.I = Variable(torch.eye(att_channels))
+        self.I = Variable(torch.eye(att_channels), requires_grad=False)
         
     
     def _encode(self, x):

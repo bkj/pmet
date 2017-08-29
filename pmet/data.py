@@ -29,5 +29,6 @@ def make_iter(indir, train='train.tsv', test='test.tsv', validation=None, batch_
         shuffle=True,
         repeat=False,
         device=device,
+        sort_key=lambda x: len(x.val),
     ), (len(VALS.vocab), len(LABS.vocab))
 

@@ -109,7 +109,7 @@ if __name__ == "__main__":
     
     print(model)
     
-    opt = torch.optim.Adam(model.parameters())
+    opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
     
     for epoch in range(args.epochs):
         print('epoch=%d | train' % epoch, file=sys.stderr)

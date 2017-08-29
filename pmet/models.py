@@ -56,7 +56,7 @@ class AttCharLSTM(nn.Module):
         self.fc1 = nn.Linear(att_channels * rec_hidden_dim, n_classes)
         
         self.I = nn.Parameter(torch.eye(att_channels), requires_grad=False)
-        
+    
     def _encode(self, x):
         # one-hot -> biLSTM encoded
         x = self.char_embs(x)

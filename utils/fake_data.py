@@ -30,7 +30,4 @@ if __name__ == "__main__":
     
     for i in xrange(args.n):
         c = random.choice(types)
-        print json.dumps({
-            "label" : c,
-            "value" : getattr(faker, c)()
-        })
+        print '\t'.join((c, str(getattr(faker, c)())))

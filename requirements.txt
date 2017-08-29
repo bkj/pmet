@@ -1,1 +1,2 @@
 Faker
+git+https://github.com/pytorch/text

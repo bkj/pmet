@@ -1,7 +1,8 @@
 #!/bin/bash
 
 mkdir -p ./data
-python ./utils/fake-data.py --n 1000 > ./data/train.jl
-python ./utils/fake-data.py --n 1000 > ./data/test.jl
+python ./utils/fake_data.py --n 1000 > ./data/train.tsv
+python ./utils/fake_data.py --n 1000 > ./data/test.tsv
 
-python models/selfatt-model.py
+python -m pmet
+python -m pmet --attention

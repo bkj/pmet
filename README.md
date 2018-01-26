@@ -6,7 +6,7 @@ This project is a descendent of https://github.com/bkj/wit -- there's been a lot
 
 Written in `pytorch` (mostly).
 
-### Usage
+### Usage and Installation
 
 See `./run.sh`
 

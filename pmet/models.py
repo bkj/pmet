@@ -3,7 +3,7 @@
     models.py
 """
 
-from __future__ import division
+from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
@@ -65,7 +65,7 @@ class AttCharLSTM(nn.Module):
         return x
     
     def _attention(self, x):
-        A = F.softmax(self.att2(F.tanh(self.att1(x))).t())
+        A = F.softmax(self.att2(F.tanh(self.att1(x))).t(), dim=1)
         x = torch.mm(A, x)
         return x, A
     

@@ -1,6 +1,6 @@
 tqdm
-torch
 pandas
 Faker
 ujson
+dill==0.2.7.1
 git+https://github.com/pytorch/text
